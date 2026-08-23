@@ -65,12 +65,12 @@ pub fn schedule(tape: &[TapeTick], cfg: &AgentConfig) -> Vec<(usize, u64)> {
                 .collect();
             let wsum: f64 = w.iter().sum();
             let mut assigned = 0u64;
-            for i in 0..k {
+            for (i, wi) in w.iter().enumerate() {
                 let idx = i * n / k;
                 if i == k - 1 {
                     out.push((idx, cfg.parent_qty - assigned));
                 } else {
-                    let q = ((w[i] / wsum) * cfg.parent_qty as f64).round() as u64;
+                    let q = ((wi / wsum) * cfg.parent_qty as f64).round() as u64;
                     assigned += q;
                     out.push((idx, q));
                 }
