@@ -56,7 +56,11 @@ pub fn schedule(tape: &[TapeTick], cfg: &AgentConfig) -> Vec<(usize, u64)> {
                 .map(|i| {
                     let lo = i * n / k;
                     let hi = ((i + 1) * n / k).max(lo + 1);
-                    tape[lo.min(n)..hi.min(n)].iter().map(|t| t.qty as f64).sum::<f64>() + 1.0
+                    tape[lo.min(n)..hi.min(n)]
+                        .iter()
+                        .map(|t| t.qty as f64)
+                        .sum::<f64>()
+                        + 1.0
                 })
                 .collect();
             let wsum: f64 = w.iter().sum();
@@ -108,7 +112,11 @@ fn fill_child(tape: &[TapeTick], start: usize, mut qty: u64, _side: ExecSide) ->
         filled += take;
         qty -= take;
     }
-    let px = if filled > 0 { notional / filled as f64 } else { 0.0 };
+    let px = if filled > 0 {
+        notional / filled as f64
+    } else {
+        0.0
+    };
     (filled, px)
 }
 
@@ -131,7 +139,11 @@ pub fn run_agent(tape: &[TapeTick], cfg: &AgentConfig) -> FillStats {
         filled_total += f;
         notional += f as f64 * px;
     }
-    let avg_px = if filled_total > 0 { notional / filled_total as f64 } else { arrival };
+    let avg_px = if filled_total > 0 {
+        notional / filled_total as f64
+    } else {
+        arrival
+    };
     // buys pay more than arrival -> positive slippage; sells the mirror
     let dir = if cfg.side == ExecSide::Buy { 1.0 } else { -1.0 };
     FillStats {

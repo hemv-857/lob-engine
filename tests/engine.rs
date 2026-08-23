@@ -1,7 +1,15 @@
-use lob_engine::{schedule, run_agent, AgentConfig, Algo, ExecSide, TapeTick, Book, CancelResult, Event, Lcg, Order, Side};
+use lob_engine::{
+    run_agent, schedule, AgentConfig, Algo, Book, CancelResult, Event, ExecSide, Lcg, Order, Side,
+    TapeTick,
+};
 
 fn mk(id: u64, side: Side, price: u64, qty: u64) -> Order {
-    Order { id, side, price, qty }
+    Order {
+        id,
+        side,
+        price,
+        qty,
+    }
 }
 
 #[test]
@@ -31,10 +39,13 @@ fn fifo_within_level_price_time_priority() {
     let _ = book.submit(mk(3, Side::Bid, 1001, 3)); // better price jumps queue
     assert_eq!(book.best_bid(), Some(1001));
     let events = book.submit(mk(9, Side::Ask, 999, 8));
-    let trades: Vec<_> = events.iter().filter_map(|e| match e {
-        Event::Trade(t) => Some(*t),
-        _ => None,
-    }).collect();
+    let trades: Vec<_> = events
+        .iter()
+        .filter_map(|e| match e {
+            Event::Trade(t) => Some(*t),
+            _ => None,
+        })
+        .collect();
     // ask for 8 eats best level (1001 x 3 = order 3), then FIFO head at 1000 (order 1, qty 5)
     assert_eq!(trades.len(), 2);
     assert_eq!(trades[0].maker_id, 3);
@@ -77,10 +88,13 @@ fn determinism_same_stream_byte_identical_results() {
         let mut book = Book::new();
         let mut oid = 0;
         let mut trade_qty = 0;
-        let mut final_qty = 0;
         for _ in 0..4000 {
             oid += 1;
-            let side = if rng.below(2) == 0 { Side::Bid } else { Side::Ask };
+            let side = if rng.below(2) == 0 {
+                Side::Bid
+            } else {
+                Side::Ask
+            };
             let price = 1000 + rng.below(21);
             let qty = 1 + rng.below(50);
             let ev = book.submit(mk(oid, side, price, qty));
@@ -90,10 +104,10 @@ fn determinism_same_stream_byte_identical_results() {
                 }
             }
             if rng.below(4) == 0 && oid > 10 {
-                let _ = book.cancel(rng.below(oid as _) as u64);
+                let _ = book.cancel(rng.below(oid as _));
             }
         }
-        final_qty = book.total_quantity();
+        let final_qty = book.total_quantity();
         (trade_qty, final_qty)
     }
     let a = run(42);
@@ -110,7 +124,11 @@ fn invariants_hold_over_random_op_storms() {
         let mut oid = 0;
         for _ in 0..5000 {
             oid += 1;
-            let side = if rng.below(2) == 0 { Side::Bid } else { Side::Ask };
+            let side = if rng.below(2) == 0 {
+                Side::Bid
+            } else {
+                Side::Ask
+            };
             let price = 1000 + rng.below(11);
             let qty = 1 + rng.below(30);
             book.submit(mk(oid, side, price, qty));
@@ -129,7 +147,7 @@ fn invariants_hold_over_random_op_storms() {
             }
         }
         // fills can consume tracked resting intents, so book count only shrinks
-        assert!(book.open_orders() as usize <= live.len());
+        assert!(book.open_orders() <= live.len());
     }
 }
 
@@ -147,16 +165,31 @@ fn synthetic_tape(n: usize) -> Vec<TapeTick> {
 fn schedules_sum_to_parent_qty_for_twap_vwap() {
     let tape = synthetic_tape(500);
     for algo in [Algo::Twap, Algo::Vwap] {
-        let cfg = AgentConfig { algo, side: ExecSide::Buy, parent_qty: 10_000, n_slices: 10, pov_rate: 0.2 };
+        let cfg = AgentConfig {
+            algo,
+            side: ExecSide::Buy,
+            parent_qty: 10_000,
+            n_slices: 10,
+            pov_rate: 0.2,
+        };
         let total: u64 = schedule(&tape, &cfg).iter().map(|(_, q)| q).sum();
-        assert_eq!(total, 10_000, "{algo:?} must allocate exactly the parent qty");
+        assert_eq!(
+            total, 10_000,
+            "{algo:?} must allocate exactly the parent qty"
+        );
     }
 }
 
 #[test]
 fn agent_fills_full_parent_on_deep_tape() {
     let tape = synthetic_tape(500);
-    let cfg = AgentConfig { algo: Algo::Twap, side: ExecSide::Buy, parent_qty: 5_000, n_slices: 10, pov_rate: 0.2 };
+    let cfg = AgentConfig {
+        algo: Algo::Twap,
+        side: ExecSide::Buy,
+        parent_qty: 5_000,
+        n_slices: 10,
+        pov_rate: 0.2,
+    };
     let stats = run_agent(&tape, &cfg);
     assert_eq!(stats.filled_qty, 5_000);
 }
@@ -165,14 +198,34 @@ fn agent_fills_full_parent_on_deep_tape() {
 fn slippage_sign_follows_direction_of_tape_drift() {
     // rising tape: buys slip positive, sells negative
     let tape: Vec<TapeTick> = (0..400)
-        .map(|i| TapeTick { qty: 100, price: 100.0 + i as f64 * 0.05 })
+        .map(|i| TapeTick {
+            qty: 100,
+            price: 100.0 + i as f64 * 0.05,
+        })
         .collect();
-    let buy = run_agent(&tape, &AgentConfig {
-        algo: Algo::Twap, side: ExecSide::Buy, parent_qty: 4_000, n_slices: 8, pov_rate: 0.2,
-    });
-    let sell = run_agent(&tape, &AgentConfig {
-        algo: Algo::Twap, side: ExecSide::Sell, parent_qty: 4_000, n_slices: 8, pov_rate: 0.2,
-    });
-    assert!(buy.slippage_bps > 10.0, "rising tape should penalize buyers");
+    let buy = run_agent(
+        &tape,
+        &AgentConfig {
+            algo: Algo::Twap,
+            side: ExecSide::Buy,
+            parent_qty: 4_000,
+            n_slices: 8,
+            pov_rate: 0.2,
+        },
+    );
+    let sell = run_agent(
+        &tape,
+        &AgentConfig {
+            algo: Algo::Twap,
+            side: ExecSide::Sell,
+            parent_qty: 4_000,
+            n_slices: 8,
+            pov_rate: 0.2,
+        },
+    );
+    assert!(
+        buy.slippage_bps > 10.0,
+        "rising tape should penalize buyers"
+    );
     assert!(sell.slippage_bps < -10.0, "rising tape rewards sellers");
 }

@@ -38,7 +38,11 @@ pub enum CancelResult {
 #[derive(Clone, Debug)]
 pub enum Event {
     Trade(Trade),
-    BookUpdate { side: Side, price: u64, new_level_qty: u64 },
+    BookUpdate {
+        side: Side,
+        price: u64,
+        new_level_qty: u64,
+    },
 }
 
 #[derive(Default)]
@@ -105,7 +109,10 @@ impl Book {
         }
         if order.qty > 0 {
             let price = order.price;
-            self.book_mut(order.side).entry(price).or_default().push_back(order);
+            self.book_mut(order.side)
+                .entry(price)
+                .or_default()
+                .push_back(order);
             self.index.insert(order.id, order);
             events.push(Event::BookUpdate {
                 side: order.side,
@@ -139,7 +146,9 @@ impl Book {
 
     pub fn total_quantity(&self) -> u64 {
         let sum_book = |b: &BTreeMap<u64, VecDeque<Order>>| -> u64 {
-            b.values().map(|lv| lv.iter().map(|o| o.qty).sum::<u64>()).sum()
+            b.values()
+                .map(|lv| lv.iter().map(|o| o.qty).sum::<u64>())
+                .sum()
         };
         sum_book(&self.bids) + sum_book(&self.asks)
     }

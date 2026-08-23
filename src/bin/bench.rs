@@ -14,9 +14,18 @@ fn main() {
     let start = Instant::now();
     for i in 0..n {
         oid += 1;
-        let side = if rng.below(2) == 0 { Side::Bid } else { Side::Ask };
+        let side = if rng.below(2) == 0 {
+            Side::Bid
+        } else {
+            Side::Ask
+        };
         let price = 1000 + rng.below(200);
-        book.submit(Order { id: oid, side, price, qty: 10 });
+        book.submit(Order {
+            id: oid,
+            side,
+            price,
+            qty: 10,
+        });
         if i % 3 == 0 && oid > 5 {
             let k = (rng.below(_live.len().max(1) as u64)) as usize;
             if !_live.is_empty() {
