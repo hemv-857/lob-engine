@@ -1,5 +1,7 @@
 # lob-engine
 
+<a href="https://github.com/hemv-857/lob-engine/actions/workflows/ci.yml"><img src="https://github.com/hemv-857/lob-engine/actions/workflows/ci.yml/badge.svg" alt="lob-engine CI"></a> <a href="https://github.com/hemv-857/lob-engine/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a> <img src="https://img.shields.io/badge/Rust-DEA584.svg" alt="Rust">
+
 Price-time priority **limit order book** in Rust (std-only, zero dependencies)
 plus an **execution-algorithm study** harness (TWAP / VWAP / POV) over
 historical trade tapes.
@@ -42,3 +44,7 @@ own live fills shows you need it.
 - Single instrument, single book; port/fee tiers are out of scope.
 - Integer tick prices only (floats are never compared).
 - Bench is wall-clock on one core; CI runs tests only, benches locally.
+
+## License
+
+[LICENSE](https://github.com/hemv-857/lob-engine/blob/master/LICENSE) — see the file for the full text.
