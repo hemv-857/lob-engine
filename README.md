@@ -45,6 +45,10 @@ own live fills shows you need it.
 - Integer tick prices only (floats are never compared).
 - Bench is wall-clock on one core; CI runs tests only, benches locally.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 [LICENSE](https://github.com/hemv-857/lob-engine/blob/master/LICENSE) — see the file for the full text.
